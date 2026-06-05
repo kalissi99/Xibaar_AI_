@@ -13,7 +13,7 @@ app.use(express.json());
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const es = new Client({ node: process.env.ELASTICSEARCH_URL });
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // ── Auth middleware ──────────────────────────────────────────────────────────
 function auth(req, res, next) {
@@ -280,6 +280,22 @@ Format as JSON:
   }
 });
 
+app.post('/api/network/scan', auth, async (req, res) => {
+  const cidr = req.body.cidr || "192.168.1.0/24";
+
+  try {
+    const output = execSync(`nmap -sn ${cidr}`).toString();
+
+    res.json({
+      scan_time: new Date(),
+      raw: output
+    });
+
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Chat with AI about your SOC
 app.post('/api/ai/chat', auth, async (req, res) => {
   const { message, history } = req.body;
@@ -312,5 +328,109 @@ Respond helpfully and concisely. If asked about specific threats, explain them c
     res.status(500).json({ error: e.message });
   }
 });
+
+
+app.post('/api/logs/ingest', async (req, res) => {
+  const log = req.body;
+
+  // extract machine
+  const machine = log.host?.name || log.machine || log.agent?.name;
+
+  if (machine) {
+    await pool.query(`
+      INSERT INTO machines (company_id, name, ip, last_seen)
+      VALUES ($1, $2, $3, NOW())
+      ON CONFLICT DO NOTHING
+    `, [log.company_id, machine, log.ip || null]);
+  }
+
+  res.json({ ok: true });
+});
+
+
+app.get('/api/machines', auth, async (req, res) => {
+  const { rows } = await pool.query(
+    'SELECT * FROM machines WHERE company_id=$1 ORDER BY last_seen DESC',
+    [req.user.company_id]
+  );
+  res.json(rows);
+});
+
+// ── Alert detection engine ────────────────────────────────────────────────
+async function detectAlerts() {
+  try {
+    // Get all company IDs from users table
+    const { rows: companies } = await pool.query('SELECT DISTINCT company_id FROM users');
+
+    for (const { company_id } of companies) {
+      try {
+        // Search Elasticsearch for events in last 2 minutes
+        const result = await es.search({
+          index: `soc-logs-${company_id}-*`,
+          size: 100,
+          query: {
+            bool: {
+              must: [
+                { match: { company_id } },
+                { exists: { field: 'alert_type' } },
+                { range: { '@timestamp': { gte: 'now-2m' } } }
+              ],
+              must_not: [
+                { match: { alert_type: 'system_event' } }
+              ]
+            }
+          }
+        });
+
+        const hits = result.hits.hits;
+
+        for (const hit of hits) {
+          const src = hit._source;
+          const alertType = src.alert_type;
+          const severity  = src.severity;
+          const machine   = src.machine || src.host?.name || 'unknown';
+          const esId      = hit._id;
+
+          if (!alertType || alertType === 'system_event') continue;
+
+          // Check if we already inserted this ES document
+          const existing = await pool.query(
+            'SELECT id FROM alerts WHERE es_index=$1 AND company_id=$2',
+            [esId, company_id]
+          );
+
+          if (existing.rows.length === 0) {
+            await pool.query(
+              `INSERT INTO alerts (company_id, alert_type, severity, machine, message, es_index)
+               VALUES ($1, $2, $3, $4, $5, $6)`,
+              [
+                company_id,
+                alertType,
+                severity,
+                machine,
+                `${alertType} detected on ${machine}`,
+                esId
+              ]
+            );
+            console.log(`[ALERT] ${severity.toUpperCase()} - ${alertType} on ${machine} (${company_id})`);
+          }
+        }
+      } catch (e) {
+        // Index might not exist yet for this company
+        if (!e.message?.includes('index_not_found')) {
+          console.error(`Alert detection error for ${company_id}:`, e.message);
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Alert engine error:', e.message);
+  }
+}
+
+// Run alert detection every 30 seconds
+setInterval(detectAlerts, 30000);
+// Also run immediately on startup after 10s delay
+setTimeout(detectAlerts, 10000);
+console.log('Alert detection engine started');
 
 app.listen(3001, () => console.log('SOC API running on :3001'));

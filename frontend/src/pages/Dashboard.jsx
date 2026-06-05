@@ -304,8 +304,8 @@ function PageLiveLogs({ logs }) {
   );
 }
 
-function PageMachines({ alerts }) {
-  const machines = [...new Set(alerts.map(a => a.machine).filter(Boolean))];
+function PageMachines({ logs, alerts }) {
+  const machines = [...new Set(logs.map(l => l.host?.name).filter(Boolean))]
   const companies = [...new Set(alerts.map(a => a.company_id).filter(Boolean))];
 
   return (
@@ -497,7 +497,7 @@ export default function Dashboard({ token, onLogout }) {
     switch(page) {
       case 'Alerts':    return <PageAlerts    alerts={alerts} onAck={ack} filter={filter} setFilter={setFilter} search={search} />;
       case 'Live Logs': return <PageLiveLogs  logs={logs} />;
-      case 'Machines':  return <PageMachines  alerts={alerts} />;
+      case 'Machines':  return <PageMachines  alerts={alerts} logs={logs} />;
       case 'Reports':   return <PageReports   alerts={alerts} stats={stats} />;
       case 'AI Agent':  return <PageAI token={token} />;
       default:          return <PageDashboard alerts={alerts} logs={logs} stats={stats} onAck={ack} filter={filter} setFilter={setFilter} search={search} />;

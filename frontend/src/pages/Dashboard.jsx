@@ -342,8 +342,10 @@ function PageMachines({ logs, alerts }) {
               {machines.length === 0 && (
                 <tr><td colSpan={6} style={{ padding: 40, textAlign: 'center', color: '#d0d0d0', fontSize: 12 }}>No machines detected yet. Install Winlogbeat on client machines.</td></tr>
               )}
+
               {machines.map(m => {
-                const mAll    = alerts.filter(a => a.machine === m);
+                console.log(logs)
+                const mAll    = logs.filter(a => a.machine === m);
                 const mOpen   = mAll.filter(a => !a.acknowledged);
                 const mCrit   = mAll.filter(a => a.severity === 'critical');
                 const company = mAll[0]?.company_id || '—';

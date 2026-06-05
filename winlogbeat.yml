@@ -1,0 +1,19 @@
+winlogbeat.event_logs:
+  - name: Security
+    event_id: 4625, 4720, 4740, 4624, 4648, 4950, 4663
+  - name: System
+    event_id: 7036
+  - name: Microsoft-Windows-PowerShell/Operational
+    event_id: 4104
+
+fields:
+  company_id: "Djibsonbecks"   # change per client
+fields_under_root: true
+
+output.logstash:
+  hosts: ["127.0.0.1:5044"]
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: C:/ProgramData/winlogbeat/logs

@@ -7,7 +7,7 @@ winlogbeat.event_logs:
     event_id: 4104
 
 fields:
-  company_id: "Djibsonbecks"   # change per client
+  company_id: "IIBS"
 fields_under_root: true
 
 output.logstash:

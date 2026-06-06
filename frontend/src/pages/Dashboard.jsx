@@ -115,102 +115,12 @@ function AlertsTable({ alerts, onAck, filter, setFilter, search }) {
   );
 }
 
-// ── Pie Chart Component (Camembert) ──────────────────────────────────────────
-function SeverityPieChart({ alerts }) {
-  const severityCounts = {
-    critical: alerts.filter(a => a.severity === 'critical').length,
-    high: alerts.filter(a => a.severity === 'high').length,
-    medium: alerts.filter(a => a.severity === 'medium').length,
-    low: alerts.filter(a => a.severity === 'low').length,
-  };
-  
-  const total = alerts.length;
-  if (total === 0) {
-    return (
-      <div style={{ textAlign: 'center', padding: 30, color: '#b0b0b0' }}>
-        ⚠ No alerts yet
-      </div>
-    );
-  }
-  
-  // Données pour le camembert
-  const data = [
-    { name: 'Critical', value: severityCounts.critical, color: '#e8483a' },
-    { name: 'High', value: severityCounts.high, color: '#f07030' },
-    { name: 'Medium', value: severityCounts.medium, color: '#3a7ae8' },
-    { name: 'Low', value: severityCounts.low, color: '#2ecc71' },
-  ].filter(d => d.value > 0);
-  
-  // Calculer les angles pour le camembert (SVG)
-  let currentAngle = -90; // Commencer à midi
-  const radius = 60;
-  const center = 75;
-  
-  const segments = [];
-  data.forEach(item => {
-    const angle = (item.value / total) * 360;
-    const startAngle = currentAngle;
-    const endAngle = currentAngle + angle;
-    
-    // Calculer les coordonnées pour l'arc SVG
-    const startRad = (startAngle * Math.PI) / 180;
-    const endRad = (endAngle * Math.PI) / 180;
-    
-    const x1 = center + radius * Math.cos(startRad);
-    const y1 = center + radius * Math.sin(startRad);
-    const x2 = center + radius * Math.cos(endRad);
-    const y2 = center + radius * Math.sin(endRad);
-    
-    const largeArc = angle > 180 ? 1 : 0;
-    
-    segments.push({
-      ...item,
-      startAngle,
-      endAngle,
-      path: `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`,
-    });
-    
-    currentAngle = endAngle;
-  });
-  
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, flexWrap: 'wrap' }}>
-      {/* Camembert SVG */}
-      <div style={{ position: 'relative', width: 150, height: 150 }}>
-        <svg width="150" height="150" viewBox="0 0 150 150">
-          {segments.map((segment, i) => (
-            <path key={i} d={segment.path} fill={segment.color} stroke="#fff" strokeWidth="2" />
-          ))}
-          {/* Cercle intérieur pour faire un donut (optionnel) */}
-          <circle cx="75" cy="75" r="35" fill="#fff" />
-          <text x="75" y="78" textAnchor="middle" fontSize="14" fontWeight="700" fill="#1a1a2e">
-            {total}
-          </text>
-          <text x="75" y="92" textAnchor="middle" fontSize="8" fill="#b0b0b0">
-            total
-          </text>
-        </svg>
-      </div>
-      
-      {/* Légende */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {data.map(item => (
-          <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 12, height: 12, borderRadius: '50%', background: item.color }}></div>
-            <span style={{ fontSize: 11, color: '#1a1a2e', minWidth: 55 }}>{item.name}</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: item.color }}>{item.value}</span>
-            <span style={{ fontSize: 10, color: '#b0b0b0' }}>({Math.round((item.value / total) * 100)}%)</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 // ── Dashboard Page WITH MITRE CHART ──────────────────────────────────────────
 function PageDashboard({ alerts, logs, stats, onAck, filter, setFilter, search }) {
   const unacked  = alerts.filter(a => !a.acknowledged);
   const critical = alerts.filter(a => a.severity === 'critical').length;
   const machines = [...new Set(alerts.map(a => a.machine).filter(Boolean))];
+  const mitreCount = alerts.filter(a => a.mitre_id).length;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%' }}>
@@ -220,7 +130,7 @@ function PageDashboard({ alerts, logs, stats, onAck, filter, setFilter, search }
           { label: 'Total Alerts',   value: alerts.length,   color: 'dodgerblue' },
           { label: 'Unacknowledged', value: unacked.length,  color: unacked.length > 0 ? RED : 'dodgerblue' },
           { label: 'Critical',       value: critical,        color: critical > 0 ? RED : 'dodgerblue' },
-          { label: 'Machines',       value: machines.length, color: 'dodgerblue' },
+          { label: 'MITRE Events',   value: mitreCount,      color: 'dodgerblue' },
         ].map(c => (
           <Card key={c.label}>
             <div style={{ fontSize: 10, color: '#b0b0b0', marginBottom: 6, fontWeight: 500 }}>{c.label}</div>
@@ -229,12 +139,9 @@ function PageDashboard({ alerts, logs, stats, onAck, filter, setFilter, search }
         ))}
       </div>
 
-      {/* CAMEMBERT (DIAGRAMME CIRCULAIRE) - PLACÉ ICI */}
+      {/* DIAGRAMME CIRCULAIRE MITRE - PLACÉ ICI AVANT ACTIVE ALERTS */}
       <Card>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 12 }}>
-          📊 Distribution des alertes par sévérité
-        </div>
-        <SeverityPieChart alerts={alerts} />
+        <MitreDonut alerts={alerts} />
       </Card>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 12, flex: 1, minHeight: 0 }}>
@@ -245,8 +152,29 @@ function PageDashboard({ alerts, logs, stats, onAck, filter, setFilter, search }
 
         {/* DROITE - STATS */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Severity Card */}
+          <Card>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 12 }}>Severity Distribution</div>
+            {['critical','high','medium','low'].map(sev => {
+              const count = alerts.filter(a => a.severity === sev).length;
+              const pct = alerts.length > 0 ? Math.round((count / alerts.length) * 100) : 0;
+              const s = SEV_STYLE[sev];
+              return (
+                <div key={sev} style={{ marginBottom: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <span style={{ fontSize: 11, fontWeight: 500, color: '#1a1a2e', textTransform: 'capitalize' }}>{sev}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: s.color }}>{count}</span>
+                  </div>
+                  <div style={{ height: 5, background: '#f5f5f7', borderRadius: 3 }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: s.dot, borderRadius: 3 }}></div>
+                  </div>
+                </div>
+              );
+            })}
+          </Card>
+
           {/* Machines Card */}
-          <Card style={{ flex: 1, overflowY: 'auto' }}>
+          <Card style={{ maxHeight: 300, overflowY: 'auto' }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 12 }}>Machines</div>
             {machines.length === 0 && <div style={{ fontSize: 11, color: '#d0d0d0', textAlign: 'center', padding: 16 }}>No machines yet</div>}
             {machines.map(m => {

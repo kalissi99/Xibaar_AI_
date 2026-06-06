@@ -290,14 +290,7 @@ async function callAI(prompt) {
   
   if (!GROQ_API_KEY) {
     console.error('GROQ_API_KEY not set');
-    return JSON.stringify({
-      risk_level: "medium",
-      summary: "Configuration API manquante",
-      threats: ["Clé API non configurée"],
-      immediate_actions: ["Configurer GROQ_API_KEY dans .env"],
-      recommendations: ["Ajouter la clé API et redémarrer"],
-      explanation: "L'API AI n'est pas configurée"
-    });
+    return "Configuration API manquante. Veuillez configurer GROQ_API_KEY.";
   }
 
   try {
@@ -308,15 +301,15 @@ async function callAI(prompt) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "mixtral-8x7b-32768",
+        model: "llama-3.1-8b-instant",
         messages: [
           {
             role: "system",
-            content: "Tu es un expert en cybersécurité SOC. Réponds UNIQUEMENT en JSON valide sans texte avant ou après. Sois concis et professionnel."
+            content: "Tu es un assistant SOC spécialisé en cybersécurité. Réponds de manière naturelle, comme un humain. Ne mets pas de JSON dans ta réponse, juste du texte normal."
           },
           { role: "user", content: prompt }
         ],
-        temperature: 0.3,
+        temperature: 0.7,
       }),
     });
 
@@ -324,21 +317,15 @@ async function callAI(prompt) {
 
     if (!response.ok) {
       console.error('Groq API error:', data);
-      throw new Error(data.error?.message || 'API error');
+      return `Erreur API: ${data.error?.message || 'Erreur inconnue'}`;
     }
 
-    return data.choices?.[0]?.message?.content || "{}";
-
+    // Retourner juste le texte, pas du JSON
+    return data.choices?.[0]?.message?.content || "Je n'ai pas pu générer une réponse.";
+    
   } catch (e) {
     console.error('callAI error:', e);
-    return JSON.stringify({
-      risk_level: "medium",
-      summary: "Erreur d'analyse",
-      threats: [],
-      immediate_actions: ["Vérifier les logs manuellement"],
-      recommendations: ["Revérifier plus tard"],
-      explanation: `Erreur: ${e.message}`
-    });
+    return `Erreur: ${e.message}`;
   }
 }
 
@@ -403,25 +390,29 @@ app.post('/api/ai/chat', auth, async (req, res) => {
       [req.user.company_id]
     );
 
-    const isGreeting = /hello|hi|hey|bonjour|salut/i.test(message);
+    // Construire le prompt simple
+    const alertSummary = alerts.length > 0 
+      ? `Alertes récentes: ${alerts.map(a => `${a.alert_type} (${a.severity}) sur ${a.machine}`).join(', ')}`
+      : "Aucune alerte récente.";
 
-    const prompt = buildPrompt({
-      message,
-      history,
-      alerts,
-      mitre,
-      mode: isGreeting ? "GREETING" : "CHAT",
-      user: req.user
-    });
+    const prompt = `Contexte: ${alertSummary}
+    
+Historique: ${(history || []).slice(-5).map(h => `${h.role}: ${h.content}`).join('\n')}
+
+Utilisateur: ${message}
+
+Réponds de façon naturelle et utile en tant qu'assistant SOC. Sois concis.`;
 
     const response = await callAI(prompt);
+    
+    // Retourner directement la réponse sans wrapper JSON
     res.json({ response });
 
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Chat error:', e);
+    res.status(500).json({ response: `Erreur: ${e.message}` });
   }
 });
-
 // AI Analyze
 app.post('/api/ai/analyze', auth, async (req, res) => {
   try {

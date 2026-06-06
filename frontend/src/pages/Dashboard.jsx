@@ -711,7 +711,7 @@ function PageAI({ token }) {
     setLoadingChat(true);
 
     try {
-      const res  = await fetch(`${API}/ai/chat`, {
+      const res = await fetch(`${API}/ai/chat`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ message: msg, history: newHistory }),
@@ -719,14 +719,13 @@ function PageAI({ token }) {
       const data = await res.json();
 
       if (!res.ok) {
-        setChatHistory(prev => [...prev, { role: 'AI', content: `⚠ Error: ${data.error || 'Server error'}` }]);
-      } else if (!data.response || data.response.trim() === '') {
-        setChatHistory(prev => [...prev, { role: 'AI', content: '⚠ Empty response - check if API key is configured.' }]);
+        setChatHistory(prev => [...prev, { role: 'AI', content: `⚠ Erreur: ${data.response || 'Erreur serveur'}` }]);
       } else {
+        // data.response est déjà le texte, pas besoin de parsing
         setChatHistory(prev => [...prev, { role: 'AI', content: data.response }]);
       }
     } catch (e) {
-      setChatHistory(prev => [...prev, { role: 'AI', content: `⚠ Network error: ${e.message}` }]);
+      setChatHistory(prev => [...prev, { role: 'AI', content: `⚠ Erreur réseau: ${e.message}` }]);
     } finally {
       setLoadingChat(false);
     }

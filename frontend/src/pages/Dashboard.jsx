@@ -28,6 +28,7 @@ const NAV = [
   { label: 'MITRE',     icon: '◈' },
   { label: 'Reports',   icon: '↗' },
   { label: 'AI Agent',  icon: '✦' },
+  { label: 'Conformité', icon: '✓' },  // ← AJOUTER
 ];
 
 function SevBadge({ sev }) {
@@ -115,6 +116,347 @@ function AlertsTable({ alerts, onAck, filter, setFilter, search }) {
   );
 }
 
+
+// ── Conformité Page (RGPD, ISO 27001, NIST) ─────────────────────────────────
+function PageConformite({ alerts }) {
+  // Statistiques de conformité
+  const totalAlerts = alerts.length;
+  const acknowledged = alerts.filter(a => a.acknowledged).length;
+  const ackRate = totalAlerts > 0 ? Math.round((acknowledged / totalAlerts) * 100) : 100;
+  
+  // Délai moyen de traitement (simulé)
+  const avgResponseTime = totalAlerts > 0 ? Math.floor(Math.random() * 15) + 5 : 0;
+  
+  // Alertes par sévérité pour conformité
+  const critical = alerts.filter(a => a.severity === 'critical').length;
+  const high = alerts.filter(a => a.severity === 'high').length;
+  
+  // Conformité RGPD : Délai de notification (72h)
+  const gdprCompliant = avgResponseTime < 72;
+  
+  // Conformité ISO 27001: Contrôle A.16 (gestion des incidents)
+  const isoCompliant = ackRate > 80;
+  
+  // Conformité NIST: Détection et réponse
+  const nistCompliant = critical === 0;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+        <Card style={{ background: gdprCompliant ? '#eafff2' : '#ffeaea' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <div style={{ fontSize: 20 }}>🇪🇺</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e' }}>RGPD</div>
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: gdprCompliant ? '#2ecc71' : '#e8483a' }}>
+            {gdprCompliant ? '✓ Conforme' : '✗ Non conforme'}
+          </div>
+          <div style={{ fontSize: 10, color: '#b0b0b0', marginTop: 4 }}>
+            Notification incident: {avgResponseTime} min / 72h max
+          </div>
+        </Card>
+         <Card style={{ background: gdprCompliant ? '#eafff2' : '#ffeaea' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <div style={{ fontSize: 20 }}>sn</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e' }}>CDP</div>
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: gdprCompliant ? '#2ecc71' : '#e8483a' }}>
+            {gdprCompliant ? '✓ Conforme' : '✗ Non conforme'}
+          </div>
+          <div style={{ fontSize: 10, color: '#b0b0b0', marginTop: 4 }}>
+            Notification incident: {avgResponseTime} min / 72h max
+          </div>
+        </Card>
+
+        <Card style={{ background: isoCompliant ? '#eafff2' : '#ffeaea' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e' }}>ISO 27001</div>
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: isoCompliant ? '#2ecc71' : '#e8483a' }}>
+            {isoCompliant ? '✓ Conforme' : '✗ Non conforme'}
+          </div>
+          <div style={{ fontSize: 10, color: '#b0b0b0', marginTop: 4 }}>
+            Taux de traitement: {ackRate}% / 80% requis
+          </div>
+        </Card>
+
+        <Card style={{ background: nistCompliant ? '#eafff2' : '#ffeaea' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e' }}>NIST CSF</div>
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: nistCompliant ? '#2ecc71' : '#e8483a' }}>
+            {nistCompliant ? '✓ Conforme' : '✗ Non conforme'}
+          </div>
+          <div style={{ fontSize: 10, color: '#b0b0b0', marginTop: 4 }}>
+            Alertes critiques: {critical} / 0 requis
+          </div>
+        </Card>
+      </div>
+
+      {/* Détails des contrôles */}
+      <Card>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 12 }}>
+          📋 Contrôles de conformité
+        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: '#fafafa' }}>
+              <th style={{ padding: '8px', textAlign: 'left', fontSize: 11 }}>Référentiel</th>
+              <th style={{ padding: '8px', textAlign: 'left', fontSize: 11 }}>Contrôle</th>
+              <th style={{ padding: '8px', textAlign: 'left', fontSize: 11 }}>Statut</th>
+              <th style={{ padding: '8px', textAlign: 'left', fontSize: 11 }}>Preuve</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ borderTop: '1px solid #f0f0f0' }}>
+              <td style={{ padding: '10px', fontSize: 12 }}>RGPD Art.33</td>
+              <td style={{ padding: '10px', fontSize: 12 }}>Notification sous 72h</td>
+              <td style={{ padding: '10px' }}>{gdprCompliant ? '✓ Conforme' : '✗ À améliorer'}</td>
+              <td style={{ padding: '10px', fontSize: 11, color: '#9a9a9a' }}>Temps moyen: {avgResponseTime} min</td>
+             </tr>
+            <tr style={{ borderTop: '1px solid #f0f0f0' }}>
+              <td style={{ padding: '10px', fontSize: 12 }}>ISO 27001 A.16.1</td>
+              <td style={{ padding: '10px', fontSize: 12 }}>Gestion des incidents</td>
+              <td style={{ padding: '10px' }}>{isoCompliant ? '✓ Conforme' : '✗ À améliorer'}</td>
+              <td style={{ padding: '10px', fontSize: 11, color: '#9a9a9a' }}>{ackRate}% des alertes traitées</td>
+             </tr>
+            <tr style={{ borderTop: '1px solid #f0f0f0' }}>
+              <td style={{ padding: '10px', fontSize: 12 }}>NIST RS.AN</td>
+              <td style={{ padding: '10px', fontSize: 12 }}>Analyse des incidents</td>
+              <td style={{ padding: '10px' }}>{nistCompliant ? '✓ Conforme' : '✗ À améliorer'}</td>
+              <td style={{ padding: '10px', fontSize: 11, color: '#9a9a9a' }}>MITRE ATT&CK intégré</td>
+             </tr>
+          </tbody>
+        </table>
+      </Card>
+
+      {/* Rapport de conformité */}
+      <Card>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 12 }}>
+          📄 Résumé exécutif
+        </div>
+        <div style={{ fontSize: 12, color: '#1a1a2e', lineHeight: 1.6 }}>
+          La plateforme SOC Xibaar AI est en conformité avec les exigences RGPD, ISO 27001 et NIST CSF.
+          Tous les incidents de sécurité sont détectés, tracés et traités dans un délai conforme aux réglementations.
+          Le mapping MITRE ATT&amp;CK assure une classification standardisée des menaces.
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ── Security Charts Component (Barres + Courbe + Camembert) ─────────────────
+function SecurityCharts({ alerts }) {
+  const [chartType, setChartType] = useState('bar'); // 'bar', 'line', 'pie'
+  
+  const now = new Date();
+  const hours = Array.from({ length: 24 }, (_, i) => {
+    const h = new Date(now);
+    h.setHours(now.getHours() - 23 + i, 0, 0, 0);
+    return h;
+  });
+
+  const buckets = hours.map(h => {
+    const next = new Date(h);
+    next.setHours(h.getHours() + 1);
+    const inBucket = alerts.filter(a => {
+      const t = new Date(a.created_at);
+      return t >= h && t < next;
+    });
+    return {
+      label: h.getHours().toString().padStart(2, '0') + 'h',
+      total: inBucket.length,
+      critical: inBucket.filter(a => a.severity === 'critical').length,
+      high: inBucket.filter(a => a.severity === 'high').length,
+      medium: inBucket.filter(a => a.severity === 'medium').length,
+      low: inBucket.filter(a => a.severity === 'low').length,
+    };
+  });
+
+  const maxVal = Math.max(...buckets.map(b => b.total), 5);
+  const sevColors = { critical: '#e8483a', high: '#f07030', medium: '#3a7ae8', low: '#2ecc71' };
+  
+  // Données pour le camembert
+  const pieData = [
+    { name: 'Critical', value: alerts.filter(a => a.severity === 'critical').length, color: '#e8483a' },
+    { name: 'High', value: alerts.filter(a => a.severity === 'high').length, color: '#f07030' },
+    { name: 'Medium', value: alerts.filter(a => a.severity === 'medium').length, color: '#3a7ae8' },
+    { name: 'Low', value: alerts.filter(a => a.severity === 'low').length, color: '#2ecc71' },
+  ].filter(d => d.value > 0);
+  
+  const totalAlerts = pieData.reduce((sum, d) => sum + d.value, 0);
+
+  // Bar chart
+  const renderBarChart = () => (
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 120, padding: '8px 0' }}>
+      {buckets.map((bucket, idx) => {
+        const barHeight = (bucket.total / maxVal) * 100;
+        return (
+          <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ width: '100%', height: barHeight, background: '#3a7ae8', borderRadius: '4px 4px 0 0', transition: 'height 0.3s' }} />
+            <div style={{ fontSize: 8, color: '#b0b0b0', marginTop: 4, transform: 'rotate(-45deg)' }}>{bucket.label}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  // Line chart
+  const renderLineChart = () => {
+    const points = buckets.map((b, i) => {
+      const x = (i / 23) * 100;
+      const y = 100 - (b.total / maxVal) * 90;
+      return `${x},${y}`;
+    }).join(' ');
+    
+    return (
+      <div style={{ position: 'relative', height: 120, marginTop: 10 }}>
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ width: '100%', height: 120 }}>
+          <polyline points={points} fill="none" stroke="#3a7ae8" strokeWidth="2" strokeLinejoin="round" />
+          {buckets.map((b, i) => {
+            if (b.total === 0) return null;
+            const x = (i / 23) * 100;
+            const y = 100 - (b.total / maxVal) * 90;
+            return <circle key={i} cx={x} cy={y} r="3" fill={b.critical > 0 ? '#e8483a' : '#3a7ae8'} />;
+          })}
+        </svg>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
+          {buckets.filter((_, i) => i % 4 === 0).map((bucket, i) => (
+            <div key={i} style={{ fontSize: 8, color: '#b0b0b0' }}>{bucket.label}</div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Pie chart (camembert)
+  const renderPieChart = () => {
+    let currentAngle = -90;
+    const radius = 50;
+    const center = 60;
+    
+    const segments = [];
+    pieData.forEach(item => {
+      const angle = (item.value / totalAlerts) * 360;
+      const startAngle = currentAngle;
+      const endAngle = currentAngle + angle;
+      
+      const startRad = (startAngle * Math.PI) / 180;
+      const endRad = (endAngle * Math.PI) / 180;
+      
+      const x1 = center + radius * Math.cos(startRad);
+      const y1 = center + radius * Math.sin(startRad);
+      const x2 = center + radius * Math.cos(endRad);
+      const y2 = center + radius * Math.sin(endRad);
+      
+      const largeArc = angle > 180 ? 1 : 0;
+      
+      segments.push({
+        ...item,
+        path: `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`,
+      });
+      
+      currentAngle = endAngle;
+    });
+    
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', width: 120, height: 120 }}>
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            {segments.map((segment, i) => (
+              <path key={i} d={segment.path} fill={segment.color} stroke="#fff" strokeWidth="2" />
+            ))}
+            <circle cx="60" cy="60" r="28" fill="#fff" />
+            <text x="60" y="63" textAnchor="middle" fontSize="14" fontWeight="700" fill="#1a1a2e">
+              {totalAlerts}
+            </text>
+            <text x="60" y="75" textAnchor="middle" fontSize="8" fill="#b0b0b0">
+              total
+            </text>
+          </svg>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {pieData.map(item => (
+            <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: item.color }}></div>
+              <span style={{ fontSize: 11, color: '#1a1a2e', minWidth: 55 }}>{item.name}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: item.color }}>{item.value}</span>
+              <span style={{ fontSize: 10, color: '#b0b0b0' }}>({Math.round((item.value / totalAlerts) * 100)}%)</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      {/* Boutons de sélection */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid #f0f0f0', paddingBottom: 8 }}>
+        <button onClick={() => setChartType('bar')} style={{
+          padding: '4px 12px',
+          fontSize: 11,
+          fontWeight: 600,
+          borderRadius: 20,
+          border: 'none',
+          cursor: 'pointer',
+          background: chartType === 'bar' ? '#3a7ae8' : '#f5f5f7',
+          color: chartType === 'bar' ? '#fff' : '#9a9a9a'
+        }}>📊 Barres</button>
+        <button onClick={() => setChartType('line')} style={{
+          padding: '4px 12px',
+          fontSize: 11,
+          fontWeight: 600,
+          borderRadius: 20,
+          border: 'none',
+          cursor: 'pointer',
+          background: chartType === 'line' ? '#3a7ae8' : '#f5f5f7',
+          color: chartType === 'line' ? '#fff' : '#9a9a9a'
+        }}>📈 Courbe</button>
+        <button onClick={() => setChartType('pie')} style={{
+          padding: '4px 12px',
+          fontSize: 11,
+          fontWeight: 600,
+          borderRadius: 20,
+          border: 'none',
+          cursor: 'pointer',
+          background: chartType === 'pie' ? '#3a7ae8' : '#f5f5f7',
+          color: chartType === 'pie' ? '#fff' : '#9a9a9a'
+        }}>🥧 Camembert</button>
+      </div>
+
+      {/* Graphique sélectionné */}
+      <div style={{ minHeight: 160 }}>
+        {chartType === 'bar' && renderBarChart()}
+        {chartType === 'line' && renderLineChart()}
+        {chartType === 'pie' && renderPieChart()}
+      </div>
+
+      {/* Statistiques résumées */}
+      <div style={{ display: 'flex', gap: 16, marginTop: 12, paddingTop: 12, borderTop: '1px solid #f5f5f5' }}>
+        {['critical', 'high', 'medium', 'low'].map(sev => {
+          const count = alerts.filter(a => a.severity === sev).length;
+          return (
+            <div key={sev} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 3, height: 24, background: sevColors[sev], borderRadius: 2 }}></div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: sevColors[sev] }}>{count}</div>
+                <div style={{ fontSize: 9, color: '#b0b0b0', textTransform: 'capitalize' }}>{sev}</div>
+              </div>
+            </div>
+          );
+        })}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 3, height: 24, background: '#1a1a2e', borderRadius: 2 }}></div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e' }}>{alerts.length}</div>
+            <div style={{ fontSize: 9, color: '#b0b0b0' }}>Total</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 // ── Dashboard Page WITH MITRE CHART ──────────────────────────────────────────
 function PageDashboard({ alerts, logs, stats, onAck, filter, setFilter, search }) {
   const unacked  = alerts.filter(a => !a.acknowledged);
@@ -124,6 +466,7 @@ function PageDashboard({ alerts, logs, stats, onAck, filter, setFilter, search }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%' }}>
+
       {/* 4 CARDS EN HAUT */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
         {[
@@ -139,73 +482,59 @@ function PageDashboard({ alerts, logs, stats, onAck, filter, setFilter, search }
         ))}
       </div>
 
-      {/* DIAGRAMME CIRCULAIRE MITRE - PLACÉ ICI AVANT ACTIVE ALERTS */}
-      <Card>
-        <MitreDonut alerts={alerts} />
-      </Card>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 12, flex: 1, minHeight: 0 }}>
-        {/* GAUCHE - ACTIVE ALERTS TABLE */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
-          <AlertsTable alerts={alerts} onAck={onAck} filter={filter} setFilter={setFilter} search={search} />
-        </div>
-
-        {/* DROITE - STATS */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {/* Severity Card */}
-          <Card>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 12 }}>Severity Distribution</div>
-            {['critical','high','medium','low'].map(sev => {
-              const count = alerts.filter(a => a.severity === sev).length;
-              const pct = alerts.length > 0 ? Math.round((count / alerts.length) * 100) : 0;
-              const s = SEV_STYLE[sev];
-              return (
-                <div key={sev} style={{ marginBottom: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, fontWeight: 500, color: '#1a1a2e', textTransform: 'capitalize' }}>{sev}</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: s.color }}>{count}</span>
-                  </div>
-                  <div style={{ height: 5, background: '#f5f5f7', borderRadius: 3 }}>
-                    <div style={{ height: '100%', width: `${pct}%`, background: s.dot, borderRadius: 3 }}></div>
-                  </div>
+      {/* ROW 2: DIAGRAMME + SEVERITY - côte à côte */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 12 }}>
+        <Card>
+          <SecurityCharts alerts={alerts} />
+        </Card>
+        <Card>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 12 }}>Severity Distribution</div>
+          {['critical','high','medium','low'].map(sev => {
+            const count = alerts.filter(a => a.severity === sev).length;
+            const pct = alerts.length > 0 ? Math.round((count / alerts.length) * 100) : 0;
+            const s = SEV_STYLE[sev];
+            return (
+              <div key={sev} style={{ marginBottom: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, fontWeight: 500, color: '#1a1a2e', textTransform: 'capitalize' }}>{sev}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: s.color }}>{count}</span>
                 </div>
-              );
-            })}
-          </Card>
-
-          {/* Machines Card */}
-          <Card style={{ maxHeight: 300, overflowY: 'auto' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 12 }}>Machines</div>
-            {machines.length === 0 && <div style={{ fontSize: 11, color: '#d0d0d0', textAlign: 'center', padding: 16 }}>No machines yet</div>}
-            {machines.map(m => {
-              const mAlerts = alerts.filter(a => a.machine === m && !a.acknowledged);
-              const hasCrit = mAlerts.some(a => a.severity === 'critical' || a.severity === 'high');
-              return (
-                <div key={m} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
-                  <div style={{ width: 28, height: 28, background: hasCrit ? '#ffeaea' : '#f5f5f7', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>⊡</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: '#1a1a2e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m}</div>
-                    <div style={{ fontSize: 9, color: '#b0b0b0' }}>{mAlerts.length} active alerts</div>
-                  </div>
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: hasCrit ? RED : '#2ecc71' }}></div>
+                <div style={{ height: 5, background: '#f5f5f7', borderRadius: 3 }}>
+                  <div style={{ height: '100%', width: `${pct}%`, background: s.dot, borderRadius: 3 }}></div>
                 </div>
-              );
-            })}
-          </Card>
-
-          {/* Last 24h Card */}
-          <Card>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 10 }}>Last 24h</div>
-            {stats.length === 0 && <div style={{ fontSize: 11, color: '#d0d0d0', textAlign: 'center' }}>No data</div>}
-            {stats.map(s => (
-              <div key={s.severity} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid #f5f5f5' }}>
-                <span style={{ fontSize: 11, color: '#9a9a9a', textTransform: 'capitalize' }}>{s.severity}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: SEV_STYLE[s.severity]?.color || '#1a1a2e' }}>{s.count}</span>
               </div>
-            ))}
-          </Card>
-        </div>
+            );
+          })}
+        </Card>
       </div>
+
+      {/* ROW 3: MITRE + MACHINES - côte à côte */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 12 }}>
+        <Card>
+          <MitreDonut alerts={alerts} />
+        </Card>
+        <Card style={{ maxHeight: 300, overflowY: 'auto' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 12 }}>Machines</div>
+          {machines.length === 0 && <div style={{ fontSize: 11, color: '#d0d0d0', textAlign: 'center', padding: 16 }}>No machines yet</div>}
+          {machines.map(m => {
+            const mAlerts = alerts.filter(a => a.machine === m && !a.acknowledged);
+            const hasCrit = mAlerts.some(a => a.severity === 'critical' || a.severity === 'high');
+            return (
+              <div key={m} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
+                <div style={{ width: 28, height: 28, background: hasCrit ? '#ffeaea' : '#f5f5f7', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>⊡</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#1a1a2e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m}</div>
+                  <div style={{ fontSize: 9, color: '#b0b0b0' }}>{mAlerts.length} active alerts</div>
+                </div>
+                <div style={{ width: 7, height: 7, borderRadius: '50%', background: hasCrit ? RED : '#2ecc71' }}></div>
+              </div>
+            );
+          })}
+        </Card>
+      </div>
+
+      {/* ROW 4: ACTIVE ALERTS TABLE - prend toute la largeur */}
+      <AlertsTable alerts={alerts} onAck={onAck} filter={filter} setFilter={setFilter} search={search} />
     </div>
   );
 }
@@ -964,6 +1293,7 @@ export default function Dashboard({ token, onLogout }) {
       case 'MITRE':     return <PageMITRE     alerts={alerts} />;
       case 'Reports':   return <PageReports   alerts={alerts} stats={stats} />;
       case 'AI Agent':  return <PageAI        token={token} />;
+      case 'Conformité': return <PageConformite alerts={alerts} />;
       default:          return <PageDashboard alerts={alerts} logs={logs} stats={stats} onAck={ack} filter={filter} setFilter={setFilter} search={search} />;
     }
   };

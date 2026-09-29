@@ -6,9 +6,9 @@
 
 | Membre | Rôle |
 |---|---|
-| [Yaye Fatou Gueye (kalissi99)](https://github.com/kalissi99) | Partie SOC : collecte des journaux Windows (Winlogbeat), pipeline Logstash → Elasticsearch → Kibana |
-| [Djibsonbecks19](https://github.com/Djibsonbecks19) | *[à compléter par ton binôme]* |
-
+| [Yaye Fatou Gueye (kalissi99)](https://github.com/kalissi99) |
+| [Djibsonbecks19](https://github.com/Djibsonbecks19) | 
+Rokhaya Ndao
 *Xibaar* signifie « information / nouvelle » en wolof. La plateforme centralise les journaux de sécurité des postes Windows, détecte les comportements suspects, les rattache au framework **MITRE ATT&CK** et propose un **assistant IA** pour aider l'analyste SOC à interpréter les alertes et les scans réseau.
 
 ---
